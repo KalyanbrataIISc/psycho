@@ -40,8 +40,7 @@ class SoundControlApp(QWidget):
         self.freq_slider.setMaximum(1000)  # Adjust the range for exponential scaling
         self.freq_slider.setValue(500)  # Default value for initial frequency
         self.freq_slider.valueChanged.connect(self.update_frequency_from_slider)
-        self.freq_label = QLabel('Frequency: 440 Hz', self)
-        freq_layout.addWidget(self.freq_label)
+        freq_layout.addWidget(QLabel('Frequency'))
         freq_layout.addWidget(self.freq_slider)
 
         # Frequency textbox
@@ -118,8 +117,7 @@ class SoundControlApp(QWidget):
         slider_value = self.freq_slider.value()
         self.current_frequency = int(20 * (10 ** (slider_value / 250)))  # Base 10 exponential scaling
 
-        # Update labels
-        self.freq_label.setText(f'Frequency: {self.current_frequency} Hz')
+        # Update frequency textbox
         self.freq_textbox.setText(str(self.current_frequency))
         self.update_sound()
 
