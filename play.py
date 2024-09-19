@@ -4,8 +4,9 @@ from PyQt5.QtWidgets import (
     QPushButton, QSlider, QLabel, QLineEdit
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIntValidator  # Import QIntValidator
+from PyQt5.QtGui import QIntValidator
 from sound import SoundGenerator
+import math
 
 class SoundControlApp(QWidget):
     def __init__(self):
@@ -14,6 +15,9 @@ class SoundControlApp(QWidget):
         # Initialize the sound generator
         self.sound_generator = SoundGenerator()
         self.is_playing = False
+
+        # Initialize current frequency
+        self.current_frequency = 440  # Default frequency
 
         # Create UI components
         self.init_ui()
@@ -29,16 +33,17 @@ class SoundControlApp(QWidget):
 
         # Frequency control (slider and textbox)
         freq_layout = QHBoxLayout()
-        
+
         # Frequency slider
         self.freq_slider = QSlider(Qt.Horizontal, self)
-        self.freq_slider.setMinimum(20)   # Min frequency
-        self.freq_slider.setMaximum(20000)  # Max frequency
-        self.freq_slider.setValue(440)   # Default frequency
+        self.freq_slider.setMinimum(0)  # Min value for exponential calculation
+        self.freq_slider.setMaximum(1000)  # Adjust the range for exponential scaling
+        self.freq_slider.setValue(500)  # Default value for initial frequency
         self.freq_slider.valueChanged.connect(self.update_frequency_from_slider)
-        freq_layout.addWidget(QLabel('Frequency'))
+        self.freq_label = QLabel('Frequency: 440 Hz', self)
+        freq_layout.addWidget(self.freq_label)
         freq_layout.addWidget(self.freq_slider)
-        
+
         # Frequency textbox
         self.freq_textbox = QLineEdit(self)
         self.freq_textbox.setText('440')
@@ -48,23 +53,15 @@ class SoundControlApp(QWidget):
 
         layout.addLayout(freq_layout)
 
-        # Left amplitude slider
-        self.left_amp_slider = QSlider(Qt.Horizontal, self)
-        self.left_amp_slider.setMinimum(0)
-        self.left_amp_slider.setMaximum(100)
-        self.left_amp_slider.setValue(50)
-        self.left_amp_slider.valueChanged.connect(self.update_sound)
-        layout.addWidget(QLabel('Left Amplitude'))
-        layout.addWidget(self.left_amp_slider)
-
-        # Right amplitude slider
-        self.right_amp_slider = QSlider(Qt.Horizontal, self)
-        self.right_amp_slider.setMinimum(0)
-        self.right_amp_slider.setMaximum(100)
-        self.right_amp_slider.setValue(50)
-        self.right_amp_slider.valueChanged.connect(self.update_sound)
-        layout.addWidget(QLabel('Right Amplitude'))
-        layout.addWidget(self.right_amp_slider)
+        # Balance slider (replacing left and right sliders)
+        self.balance_slider = QSlider(Qt.Horizontal, self)
+        self.balance_slider.setMinimum(-100)
+        self.balance_slider.setMaximum(100)
+        self.balance_slider.setValue(0)  # Default to 50-50 balance
+        self.balance_slider.valueChanged.connect(self.update_sound)
+        self.balance_label = QLabel('Balance: L 50% - R 50%', self)
+        layout.addWidget(self.balance_label)
+        layout.addWidget(self.balance_slider)
 
         # Phase difference slider
         self.phase_diff_slider = QSlider(Qt.Horizontal, self)
@@ -72,7 +69,8 @@ class SoundControlApp(QWidget):
         self.phase_diff_slider.setMaximum(180)
         self.phase_diff_slider.setValue(0)
         self.phase_diff_slider.valueChanged.connect(self.update_sound)
-        layout.addWidget(QLabel('Phase Difference'))
+        self.phase_label = QLabel('Phase Difference: 0°', self)
+        layout.addWidget(self.phase_label)
         layout.addWidget(self.phase_diff_slider)
 
         # Set layout and show
@@ -100,25 +98,41 @@ class SoundControlApp(QWidget):
 
     def update_sound(self):
         if self.is_playing:
-            frequency = int(self.freq_textbox.text())  # Get frequency from textbox
-            left_amp = self.left_amp_slider.value() / 100.0
-            right_amp = self.right_amp_slider.value() / 100.0
+            # Calculate the balance
+            balance = self.balance_slider.value()
+            left_amp = max(0, (100 - balance) / 100.0)  # Left amplitude
+            right_amp = max(0, (100 + balance) / 100.0)  # Right amplitude
+            # Update balance label
+            self.balance_label.setText(f'Balance: L {int(left_amp * 100)}% - R {int(right_amp * 100)}%')
+
+            # Get phase difference
             phase_diff = self.phase_diff_slider.value()
+            # Update phase label
+            self.phase_label.setText(f'Phase Difference: {phase_diff}°')
 
             # Update the sound properties for real-time adjustment
-            self.sound_generator.update_sound_properties(frequency, left_amp, right_amp, phase_diff)
+            self.sound_generator.update_sound_properties(self.current_frequency, left_amp, right_amp, phase_diff)
 
     def update_frequency_from_slider(self):
-        # Update frequency textbox when slider changes
-        frequency = self.freq_slider.value()
-        self.freq_textbox.setText(str(frequency))
+        # Apply exponential scaling
+        slider_value = self.freq_slider.value()
+        self.current_frequency = int(20 * (10 ** (slider_value / 250)))  # Base 10 exponential scaling
+
+        # Update labels
+        self.freq_label.setText(f'Frequency: {self.current_frequency} Hz')
+        self.freq_textbox.setText(str(self.current_frequency))
         self.update_sound()
 
     def update_frequency_from_textbox(self):
         # Update frequency slider when textbox changes
         try:
             frequency = int(self.freq_textbox.text())
-            self.freq_slider.setValue(frequency)
+            self.current_frequency = frequency
+
+            # Convert the frequency to slider value for consistency
+            slider_value = int(250 * math.log10(frequency / 20))
+            self.freq_slider.setValue(slider_value)
+
             self.update_sound()
         except ValueError:
             pass  # Ignore invalid input
