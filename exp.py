@@ -2,9 +2,9 @@ import sys
 import json
 import random
 import os
-from PyQt5.QtWidgets import QApplication, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QProgressBar, QLineEdit, QRadioButton, QButtonGroup, QMessageBox
+from PyQt5.QtWidgets import QApplication, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QProgressBar, QLineEdit, QRadioButton, QButtonGroup, QMessageBox, QCheckBox
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QPixmap, QIcon, QPalette, QColor
 import shift as sft
 
 # Sound shifting functions
@@ -19,14 +19,17 @@ class UserDataWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle('User Information')
-        self.setGeometry(200, 200, 300, 200)
+        self.setGeometry(200, 200, 300, 300)
 
+        # Name input
         self.name_label = QLabel('Name:')
         self.name_input = QLineEdit(self)
 
+        # Age input
         self.age_label = QLabel('Age:')
         self.age_input = QLineEdit(self)
 
+        # Gender input (radio buttons)
         self.gender_label = QLabel('Gender:')
         self.male_radio = QRadioButton('Male', self)
         self.female_radio = QRadioButton('Female', self)
@@ -36,9 +39,22 @@ class UserDataWindow(QWidget):
         self.gender_group.addButton(self.female_radio)
         self.gender_group.addButton(self.other_radio)
 
+        # Optional email input
+        self.email_label = QLabel('Email (optional):')
+        self.email_input = QLineEdit(self)
+
+        # Optional phone input
+        self.phone_label = QLabel('Phone (optional):')
+        self.phone_input = QLineEdit(self)
+
+        # Consent checkbox
+        self.consent_checkbox = QCheckBox("I consent to participate in the experiment and data usage")
+
+        # Submit button
         self.submit_button = QPushButton('Submit', self)
         self.submit_button.clicked.connect(self.collect_user_data)
 
+        # Layout
         layout = QVBoxLayout()
         layout.addWidget(self.name_label)
         layout.addWidget(self.name_input)
@@ -48,13 +64,23 @@ class UserDataWindow(QWidget):
         layout.addWidget(self.male_radio)
         layout.addWidget(self.female_radio)
         layout.addWidget(self.other_radio)
+        layout.addWidget(self.email_label)
+        layout.addWidget(self.email_input)
+        layout.addWidget(self.phone_label)
+        layout.addWidget(self.phone_input)
+        layout.addWidget(self.consent_checkbox)
         layout.addWidget(self.submit_button)
 
         self.setLayout(layout)
 
     def collect_user_data(self):
+        # Collect user input
         self.name = self.name_input.text()
         self.age = self.age_input.text()
+        self.email = self.email_input.text()
+        self.phone = self.phone_input.text()
+
+        # Determine gender
         self.gender = None
         if self.male_radio.isChecked():
             self.gender = 'Male'
@@ -63,16 +89,17 @@ class UserDataWindow(QWidget):
         elif self.other_radio.isChecked():
             self.gender = 'Other'
 
-        if self.name and self.age and self.gender:
+        # Ensure all required fields are filled and consent is given
+        if self.name and self.age and self.gender and self.consent_checkbox.isChecked():
             self.hide()
-            self.experiment_window = ExperimentWindow(self.name, self.age, self.gender)
+            self.experiment_window = ExperimentWindow(self.name, self.age, self.gender, self.email, self.phone)
             self.experiment_window.show()
         else:
-            QMessageBox.warning(self, 'Input Error', 'Please fill out all fields!')
+            QMessageBox.warning(self, 'Input Error', 'Please fill out all required fields and provide consent!')
 
 
 class ExperimentWindow(QWidget):
-    def __init__(self, name, age, gender):
+    def __init__(self, name, age, gender, email, phone):
         super().__init__()
 
         self.setWindowTitle('Sound Shift Experiment')
@@ -83,12 +110,21 @@ class ExperimentWindow(QWidget):
             'name': name,
             'age': age,
             'gender': gender,
+            'email': email,
+            'phone': phone,
             'responses': []
         }
 
         # Main label to display instructions
         self.label = QLabel('Press Space to start the experiment', self)
         self.label.setAlignment(Qt.AlignCenter)
+
+        # "Listen carefully!" label
+        self.listen_label = QLabel('')
+        self.listen_label.setAlignment(Qt.AlignCenter)
+        listen_palette = self.listen_label.palette()
+        listen_palette.setColor(QPalette.WindowText, QColor('green'))
+        self.listen_label.setPalette(listen_palette)
 
         # Progress Bar
         self.progress_bar = QProgressBar(self)
@@ -113,6 +149,7 @@ class ExperimentWindow(QWidget):
 
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.label)
+        self.vbox.addWidget(self.listen_label)
         self.vbox.addLayout(arrow_layout)
         self.vbox.addLayout(option_layout)
         self.vbox.addWidget(self.progress_bar)
@@ -184,8 +221,11 @@ class ExperimentWindow(QWidget):
         # Update progress bar
         self.progress_bar.setValue(self.current_trial_index)
 
-        # Play the sound for the current trial
-        self.play_sound_and_start_response()
+        # Show "Listen carefully!" before playing the sound
+        self.listen_label.setText("Listen carefully!")
+
+        # Wait a short moment (500 ms) and then play the sound
+        QTimer.singleShot(500, self.play_sound_and_start_response)
 
     def play_sound_and_start_response(self):
         # Retrieve the condition and frequency from the current trial
@@ -204,12 +244,18 @@ class ExperimentWindow(QWidget):
         elif selected_condition == 'constant':
             cnst(selected_frequency)
 
+        # Remove the "Listen carefully!" message after the sound finishes (after 1 second)
+        QTimer.singleShot(1000, self.clear_listen_label)
+
         # Save the actual condition and frequency for the current trial
         self.current_trial_sound = selected_condition
         self.current_trial_freq = selected_frequency
 
-        # Proceed to Q1
-        self.ask_question_1()
+        # Proceed to Q1 after a short delay (1 second)
+        QTimer.singleShot(1000, self.ask_question_1)
+
+    def clear_listen_label(self):
+        self.listen_label.setText('')
 
     def ask_question_1(self):
         self.trial_active = True
@@ -233,6 +279,14 @@ class ExperimentWindow(QWidget):
     def keyPressEvent(self, event):
         if not self.trial_active and event.key() == Qt.Key_Space:
             # Start the next trial when space bar is pressed
+            self.update_arrow_icons(False)  # Hide arrows
+            self.update_option_labels()  # Clear options
+            self.start_trial()
+            return
+
+        # Repeat trial if "R" is pressed
+        if not self.trial_active and event.key() == Qt.Key_R:
+            self.current_trial_index -= 1  # Go back one trial
             self.update_arrow_icons(False)  # Hide arrows
             self.update_option_labels()  # Clear options
             self.start_trial()
@@ -279,7 +333,7 @@ class ExperimentWindow(QWidget):
         self.user_data['responses'][-1][question] = answer
 
     def end_trial(self):
-        self.label.setText('Press Space to start the next trial.')
+        self.label.setText('Press Space to start the next trial or R to repeat.')
         self.trial_active = False
         self.question_stage = None
         self.update_arrow_icons(False)  # Hide arrows
@@ -300,6 +354,8 @@ class ExperimentWindow(QWidget):
                 'name': self.user_data['name'],
                 'age': self.user_data['age'],
                 'gender': self.user_data['gender'],
+                'email': self.user_data['email'],  # Save email
+                'phone': self.user_data['phone'],  # Save phone
                 'responses': organized_data
             }, f, indent=4)
         event.accept()
