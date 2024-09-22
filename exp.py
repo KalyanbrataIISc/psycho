@@ -1,11 +1,13 @@
 import sys
 import json
 import random
+import os
 from PyQt5.QtWidgets import QApplication, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QProgressBar, QLineEdit, QRadioButton, QButtonGroup, QMessageBox
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QIcon
 import shift as sft
 
+# Sound shifting functions
 fl = lambda x: sft.sound_shift(x, 'phase', 'left', 'short')
 fr = lambda x: sft.sound_shift(x, 'phase', 'right', 'short')
 sl = lambda x: sft.sound_shift(x, 'phase', 'left', 'long')
@@ -90,20 +92,29 @@ class ExperimentWindow(QWidget):
 
         # Progress Bar
         self.progress_bar = QProgressBar(self)
-        self.progress_bar.setMaximum(160)  # For 160 trials
+        self.progress_bar.setMaximum(120)  # For 120 trials (updated)
 
         # Visual Arrow Buttons (for Left/Right)
         self.left_arrow = QLabel(self)
         self.right_arrow = QLabel(self)
-        self.update_arrow_icons()  # Load default arrow icons
+        self.left_option_label = QLabel("")
+        self.right_option_label = QLabel("")
+        self.left_option_label.setAlignment(Qt.AlignCenter)  # Center align option labels
+        self.right_option_label.setAlignment(Qt.AlignCenter)
+        self.update_arrow_icons(False, False)  # Hide arrows initially
 
         arrow_layout = QHBoxLayout()
         arrow_layout.addWidget(self.left_arrow)
         arrow_layout.addWidget(self.right_arrow)
 
+        option_layout = QHBoxLayout()
+        option_layout.addWidget(self.left_option_label)
+        option_layout.addWidget(self.right_option_label)
+
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.label)
         self.vbox.addLayout(arrow_layout)
+        self.vbox.addLayout(option_layout)
         self.vbox.addWidget(self.progress_bar)
         self.setLayout(self.vbox)
 
@@ -114,12 +125,15 @@ class ExperimentWindow(QWidget):
         self.question_stage = None  # Q1, Q2, Q3
         self.current_trial = None
 
-        # Generate trials (5 conditions × 40 frequencies = 200 trials)
-        sound_conditions = ['left_fast', 'left_slow', 'right_fast', 'right_slow', 'constant']
+        # Generate 3 conditions per frequency (Left, Right, Flat) with random speeds
+        sound_conditions = ['left', 'right', 'flat']
         frequencies = list(range(0, 2050, 50))
+        speeds = ['short', 'long']
 
         self.trials = [
-            {'sound': condition, 'frequency': freq}
+            {'sound': random.choice(['left_fast', 'left_slow']), 'frequency': freq} if condition == 'left' else
+            {'sound': random.choice(['right_fast', 'right_slow']), 'frequency': freq} if condition == 'right' else
+            {'sound': 'constant', 'frequency': freq}
             for condition in sound_conditions
             for freq in frequencies
         ]
@@ -128,25 +142,36 @@ class ExperimentWindow(QWidget):
         random.shuffle(self.trials)
 
         self.current_trial_index = 0
-        self.space_bar_pressed = False  # To wait for space bar to start the next trial
 
         # Set focus for space bar to start next trial
         self.setFocusPolicy(Qt.StrongFocus)
 
-    def update_arrow_icons(self, left_selected=False, right_selected=False):
+    def update_arrow_icons(self, show_arrows=True, left_selected=False, right_selected=False):
         """
         Update the icons for the left and right arrow labels.
         If an arrow is selected, change its color to green.
+        Show or hide the arrows based on the 'show_arrows' argument.
         """
-        if left_selected:
-            self.left_arrow.setPixmap(QPixmap('psycho/resources/left_green.png'))
-        else:
-            self.left_arrow.setPixmap(QPixmap('psycho/resources/left_blue.png'))
+        if show_arrows:
+            if left_selected:
+                self.left_arrow.setPixmap(QPixmap('psycho/resources/left_green.png'))
+            else:
+                self.left_arrow.setPixmap(QPixmap('psycho/resources/left_blue.png'))
 
-        if right_selected:
-            self.right_arrow.setPixmap(QPixmap('psycho/resources/right_green.png'))
+            if right_selected:
+                self.right_arrow.setPixmap(QPixmap('psycho/resources/right_green.png'))
+            else:
+                self.right_arrow.setPixmap(QPixmap('psycho/resources/right_blue.png'))
         else:
-            self.right_arrow.setPixmap(QPixmap('psycho/resources/right_blue.png'))
+            self.left_arrow.clear()
+            self.right_arrow.clear()
+
+    def update_option_labels(self, left_text="", right_text=""):
+        """
+        Update the labels under the arrows to display the options.
+        """
+        self.left_option_label.setText(left_text)
+        self.right_option_label.setText(right_text)
 
     def start_trial(self):
         if self.current_trial_index >= len(self.trials):
@@ -189,39 +214,40 @@ class ExperimentWindow(QWidget):
     def ask_question_1(self):
         self.trial_active = True
         self.question_stage = "Q1"
-        self.label.setText('Q1: Was there a change? (Yes: Left Arrow, No: Right Arrow)')
-        self.update_arrow_icons()  # Reset arrows to default
+        self.label.setText('Q1: Was there a change?')
+        self.update_arrow_icons(True)  # Show arrows
+        self.update_option_labels("Yes", "No")
 
     def ask_question_2(self):
         self.question_stage = "Q2"
-        self.label.setText('Q2: Which direction? (Left: Left Arrow, Right: Right Arrow)')
-        self.update_arrow_icons()
+        self.label.setText('Q2: Which direction?')
+        self.update_arrow_icons(True)
+        self.update_option_labels("Left", "Right")
 
     def ask_question_3(self):
         self.question_stage = "Q3"
-        self.label.setText('Q3: How fast? (Fast: Left Arrow, Slow: Right Arrow)')
-        self.update_arrow_icons()
+        self.label.setText('Q3: How fast?')
+        self.update_arrow_icons(True)
+        self.update_option_labels("Fast", "Slow")
 
     def keyPressEvent(self, event):
         if not self.trial_active and event.key() == Qt.Key_Space:
             # Start the next trial when space bar is pressed
+            self.update_arrow_icons(False)  # Hide arrows
+            self.update_option_labels()  # Clear options
             self.start_trial()
             return
 
         if self.trial_active:
             if self.question_stage == "Q1":
                 if event.key() == Qt.Key_Left:  # Yes, there was a change
-                    if self.current_trial_sound == "constant":
-                        self.record_response("change_detected", False)
-                        self.end_trial()  # No need to proceed with Q2/Q3
-                    else:
-                        self.record_response("change_detected", True)
-                        self.update_arrow_icons(left_selected=True)  # Light up left arrow
-                        QTimer.singleShot(500, self.ask_question_2)  # 0.5-second delay before Q2
+                    self.record_response("change_detected", True)
+                    self.update_arrow_icons(left_selected=True)  # Light up left arrow
+                    QTimer.singleShot(500, self.ask_question_2)  # 0.5-second delay before Q2
                 elif event.key() == Qt.Key_Right:  # No change
                     self.record_response("change_detected", False)
                     self.update_arrow_icons(right_selected=True)  # Light up right arrow
-                    QTimer.singleShot(500, self.end_trial)  # Skip remaining questions and end trial
+                    QTimer.singleShot(500, self.end_trial)  # Skip remaining questions and end trial only if "No"
 
             elif self.question_stage == "Q2":
                 if event.key() == Qt.Key_Left:  # Left
@@ -256,18 +282,26 @@ class ExperimentWindow(QWidget):
         self.label.setText('Press Space to start the next trial.')
         self.trial_active = False
         self.question_stage = None
+        self.update_arrow_icons(False)  # Hide arrows
+        self.update_option_labels()  # Clear options
 
     def end_experiment(self):
         self.label.setText('Experiment complete!')
 
     def closeEvent(self, event):
         # Save the collected data when the window is closed
+        raw_data_path = os.path.join('psycho', 'raw_data')
+        os.makedirs(raw_data_path, exist_ok=True)
+        file_path = os.path.join(raw_data_path, f'user_data_{self.user_data["name"]}.json')
+        
         organized_data = sorted(self.user_data['responses'], key=lambda x: x['frequency'])
-        with open(f'user_data_{self.user_data["name"]}.json', 'w') as f:
-            json.dump({'name': self.user_data['name'],
-                       'age': self.user_data['age'],
-                       'gender': self.user_data['gender'],
-                       'responses': organized_data}, f, indent=4)
+        with open(file_path, 'w') as f:
+            json.dump({
+                'name': self.user_data['name'],
+                'age': self.user_data['age'],
+                'gender': self.user_data['gender'],
+                'responses': organized_data
+            }, f, indent=4)
         event.accept()
 
 
