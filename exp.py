@@ -191,14 +191,14 @@ class ExperimentWindow(QWidget):
         """
         if show_arrows:
             if left_selected:
-                self.left_arrow.setPixmap(QPixmap('psycho/resources/left_green.png'))
+                self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left_green.png')))
             else:
-                self.left_arrow.setPixmap(QPixmap('psycho/resources/left_blue.png'))
+                self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left_blue.png')))
 
             if right_selected:
-                self.right_arrow.setPixmap(QPixmap('psycho/resources/right_green.png'))
+                self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right_green.png')))
             else:
-                self.right_arrow.setPixmap(QPixmap('psycho/resources/right_blue.png'))
+                self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right_blue.png')))
         else:
             self.left_arrow.clear()
             self.right_arrow.clear()
@@ -344,7 +344,7 @@ class ExperimentWindow(QWidget):
 
     def closeEvent(self, event):
         # Save the collected data when the window is closed
-        raw_data_path = os.path.join('psycho', 'raw_data')
+        raw_data_path = os.path.join(os.path.dirname(__file__), 'raw_data')
         os.makedirs(raw_data_path, exist_ok=True)
         file_path = os.path.join(raw_data_path, f'user_data_{self.user_data["name"]}.json')
         
