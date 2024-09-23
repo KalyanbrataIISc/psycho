@@ -1,15 +1,12 @@
 import subprocess
 import sys
 
-# List of packages to reinstall
-required_packages = ['PyQt5']  # Add the packages you want to reinstall
+# Reinstall necessary packages
+required_packages = ['PyQt5']
 
-# Loop through and reinstall each package
 for package in required_packages:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--force-reinstall', package])
-
-# Rest of your script goes here
-print("Packages reinstalled successfully!")
+print("Packages installed successfully. Please restart the script.")
 
 import json
 import random
@@ -17,7 +14,8 @@ import os
 from PyQt5.QtWidgets import QApplication, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QProgressBar, QLineEdit, QRadioButton, QButtonGroup, QMessageBox, QCheckBox
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QPalette, QColor
-import shift as sft
+from datetime import datetime
+import shift as sft  # Assuming this is a valid library for sound shifting
 
 # Sound shifting functions
 fl = lambda x: sft.sound_shift(x, 'phase', 'left', 'short')
@@ -173,6 +171,7 @@ class ExperimentWindow(QWidget):
         self.current_trial_freq = None
         self.question_stage = None  # Q1, Q2, Q3
         self.current_trial = None
+        self.current_trial_start_time = None  # Store start time for each trial
 
         # Generate 3 conditions per frequency (Left, Right, Flat) with random speeds
         sound_conditions = ['left', 'right', 'flat']
@@ -195,64 +194,6 @@ class ExperimentWindow(QWidget):
         # Set focus for space bar to start next trial
         self.setFocusPolicy(Qt.StrongFocus)
 
-    def update_arrow_icons(self, show_arrows=True, left_selected=False, right_selected=False):
-        """
-        Update the icons for the left and right arrow labels.
-        If an arrow is selected, change its color to green.
-        Show or hide the arrows based on the 'show_arrows' argument.
-        """
-        if self.question_stage == "Q1":  # Q1: Was there a change? (Yes/No)
-            if show_arrows:
-                if left_selected:
-                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/yes-on.png')))
-                else:
-                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/yes-off.png')))
-                    
-                if right_selected:
-                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/no-on.png')))
-                else:
-                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/no-off.png')))
-            else:
-                self.left_arrow.clear()
-                self.right_arrow.clear()
-
-        elif self.question_stage == "Q2":  # Q2: Which direction? (Left/Right)
-            if show_arrows:
-                if left_selected:
-                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left-on.png')))
-                else:
-                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left-off.png')))
-                    
-                if right_selected:
-                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right-on.png')))
-                else:
-                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right-off.png')))
-            else:
-                self.left_arrow.clear()
-                self.right_arrow.clear()
-
-        elif self.question_stage == "Q3":  # Q3: How fast? (Fast/Slow)
-            if show_arrows:
-                if left_selected:
-                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/fast-on.png')))
-                else:
-                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/fast-off.png')))
-                    
-                if right_selected:
-                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/slow-on.png')))
-                else:
-                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/slow-off.png')))
-            else:
-                self.left_arrow.clear()
-                self.right_arrow.clear()
-
-    def update_option_labels(self, left_text="", right_text=""):
-        """
-        Update the labels under the arrows to display the options.
-        """
-        self.left_option_label.setText(left_text)
-        self.right_option_label.setText(right_text)
-
     def start_trial(self):
         if self.current_trial_index >= len(self.trials):
             self.end_experiment()
@@ -263,6 +204,9 @@ class ExperimentWindow(QWidget):
 
         # Update progress bar
         self.progress_bar.setValue(self.current_trial_index)
+
+        # Log the starting time of the trial
+        self.current_trial_start_time = datetime.now().isoformat()
 
         # Show "Listen carefully!" before playing the sound
         self.listen_label.setText("Listen carefully!")
@@ -367,13 +311,73 @@ class ExperimentWindow(QWidget):
                     QTimer.singleShot(500, self.end_trial)  # 0.5-second delay before ending the trial
 
     def record_response(self, question, answer):
+        # Log the response and the trial start time if it's a new trial
         if len(self.user_data['responses']) < self.current_trial_index:
             self.user_data['responses'].append({
                 'frequency': self.current_trial_freq,
-                'trial_sound': self.current_trial_sound
+                'trial_sound': self.current_trial_sound,
+                'start_time': self.current_trial_start_time  # Store the start time
             })
         
         self.user_data['responses'][-1][question] = answer
+
+    def update_arrow_icons(self, show_arrows=True, left_selected=False, right_selected=False):
+        """
+        Update the icons for the left and right arrow labels.
+        If an arrow is selected, change its color to green.
+        Show or hide the arrows based on the 'show_arrows' argument.
+        """
+        if self.question_stage == "Q1":  # Q1: Was there a change? (Yes/No)
+            if show_arrows:
+                if left_selected:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/yes-on.png')))
+                else:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/yes-off.png')))
+                    
+                if right_selected:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/no-on.png')))
+                else:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/no-off.png')))
+            else:
+                self.left_arrow.clear()
+                self.right_arrow.clear()
+
+        elif self.question_stage == "Q2":  # Q2: Which direction? (Left/Right)
+            if show_arrows:
+                if left_selected:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left-on.png')))
+                else:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left-off.png')))
+                    
+                if right_selected:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right-on.png')))
+                else:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right-off.png')))
+            else:
+                self.left_arrow.clear()
+                self.right_arrow.clear()
+
+        elif self.question_stage == "Q3":  # Q3: How fast? (Fast/Slow)
+            if show_arrows:
+                if left_selected:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/fast-on.png')))
+                else:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/fast-off.png')))
+                    
+                if right_selected:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/slow-on.png')))
+                else:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/slow-off.png')))
+            else:
+                self.left_arrow.clear()
+                self.right_arrow.clear()
+
+    def update_option_labels(self, left_text="", right_text=""):
+        """
+        Update the labels under the arrows to display the options.
+        """
+        self.left_option_label.setText(left_text)
+        self.right_option_label.setText(right_text)
 
     def end_trial(self):
         # Clear arrows and labels before ending the trial

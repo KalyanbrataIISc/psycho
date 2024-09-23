@@ -1,0 +1,5 @@
+name,age,gender,email,phone
+test,19,Male,NIL,NIL
+frequency,trial_direction,trial_speed,change_detected,direction,speed,start_time
+1450,right,fast,True,right,slow,2024-09-23T18:47:36.710256
+1650,left,slow,False,NIL,NIL,2024-09-23T18:47:58.600956

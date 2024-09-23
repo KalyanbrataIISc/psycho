@@ -33,14 +33,14 @@ def json_to_csv():
                     data.get('name', 'NIL'), 
                     data.get('age', 'NIL'), 
                     data.get('gender', 'NIL'), 
-                    data.get('email', 'NIL'), 
-                    data.get('phone', 'NIL')
+                    data.get('email', 'NIL') if data.get('email') else 'NIL',
+                    data.get('phone', 'NIL') if data.get('phone') else 'NIL'
                 ]
                 csv_writer.writerow(user_info_headers)
                 csv_writer.writerow(user_info)
 
                 # Write usable data headers, now with trial_direction and trial_speed
-                data_headers = ['frequency', 'trial_direction', 'trial_speed', 'change_detected', 'direction', 'speed']
+                data_headers = ['frequency', 'trial_direction', 'trial_speed', 'change_detected', 'direction', 'speed', 'start_time']
                 csv_writer.writerow(data_headers)
 
                 # Iterate through the responses and write usable data, using "NIL" for missing data
@@ -57,14 +57,15 @@ def json_to_csv():
                         trial_direction = direction
                         trial_speed = speed
 
-                    # Write row with broken trial_direction and trial_speed
+                    # Write row with trial_direction and trial_speed
                     row = [
                         response.get('frequency', 'NIL'),
                         trial_direction,
                         trial_speed,
                         response.get('change_detected', 'NIL'),
                         response.get('direction', 'NIL'),
-                        response.get('speed', 'NIL')
+                        response.get('speed', 'NIL'),
+                        response.get('start_time', 'NIL')
                     ]
                     csv_writer.writerow(row)
 
