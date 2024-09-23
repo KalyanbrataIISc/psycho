@@ -1,12 +1,15 @@
 import subprocess
 import sys
 
+"""
+# Run this script to use .venv environment
 # Reinstall necessary packages
 required_packages = ['PyQt5']
 
 for package in required_packages:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--force-reinstall', package])
 print("Packages installed successfully. Please restart the script.")
+"""
 
 import json
 import random
