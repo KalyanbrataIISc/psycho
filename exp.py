@@ -1,10 +1,22 @@
+import subprocess
 import sys
+
+# List of packages to reinstall
+required_packages = ['PyQt5']  # Add the packages you want to reinstall
+
+# Loop through and reinstall each package
+for package in required_packages:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--force-reinstall', package])
+
+# Rest of your script goes here
+print("Packages reinstalled successfully!")
+
 import json
 import random
 import os
 from PyQt5.QtWidgets import QApplication, QPushButton, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QProgressBar, QLineEdit, QRadioButton, QButtonGroup, QMessageBox, QCheckBox
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QPixmap, QIcon, QPalette, QColor
+from PyQt5.QtGui import QPixmap, QPalette, QColor
 import shift as sft
 
 # Sound shifting functions
@@ -13,6 +25,7 @@ fr = lambda x: sft.sound_shift(x, 'phase', 'right', 'short')
 sl = lambda x: sft.sound_shift(x, 'phase', 'left', 'long')
 sr = lambda x: sft.sound_shift(x, 'phase', 'right', 'long')
 cnst = lambda x: sft.sound_shift(x, 'flat')
+
 
 class UserDataWindow(QWidget):
     def __init__(self):
@@ -137,7 +150,6 @@ class ExperimentWindow(QWidget):
         self.right_option_label = QLabel("")
         self.left_option_label.setAlignment(Qt.AlignCenter)  # Center align option labels
         self.right_option_label.setAlignment(Qt.AlignCenter)
-        self.update_arrow_icons(False, False)  # Hide arrows initially
 
         arrow_layout = QHBoxLayout()
         arrow_layout.addWidget(self.left_arrow)
@@ -189,19 +201,50 @@ class ExperimentWindow(QWidget):
         If an arrow is selected, change its color to green.
         Show or hide the arrows based on the 'show_arrows' argument.
         """
-        if show_arrows:
-            if left_selected:
-                self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left_green.png')))
+        if self.question_stage == "Q1":  # Q1: Was there a change? (Yes/No)
+            if show_arrows:
+                if left_selected:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/yes-on.png')))
+                else:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/yes-off.png')))
+                    
+                if right_selected:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/no-on.png')))
+                else:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/no-off.png')))
             else:
-                self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left_blue.png')))
+                self.left_arrow.clear()
+                self.right_arrow.clear()
 
-            if right_selected:
-                self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right_green.png')))
+        elif self.question_stage == "Q2":  # Q2: Which direction? (Left/Right)
+            if show_arrows:
+                if left_selected:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left-on.png')))
+                else:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/left-off.png')))
+                    
+                if right_selected:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right-on.png')))
+                else:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right-off.png')))
             else:
-                self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/right_blue.png')))
-        else:
-            self.left_arrow.clear()
-            self.right_arrow.clear()
+                self.left_arrow.clear()
+                self.right_arrow.clear()
+
+        elif self.question_stage == "Q3":  # Q3: How fast? (Fast/Slow)
+            if show_arrows:
+                if left_selected:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/fast-on.png')))
+                else:
+                    self.left_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/fast-off.png')))
+                    
+                if right_selected:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/slow-on.png')))
+                else:
+                    self.right_arrow.setPixmap(QPixmap(os.path.join(os.path.dirname(__file__), 'resources/slow-off.png')))
+            else:
+                self.left_arrow.clear()
+                self.right_arrow.clear()
 
     def update_option_labels(self, left_text="", right_text=""):
         """
@@ -333,11 +376,13 @@ class ExperimentWindow(QWidget):
         self.user_data['responses'][-1][question] = answer
 
     def end_trial(self):
+        # Clear arrows and labels before ending the trial
+        self.update_arrow_icons(False)  # Hide arrows
+        self.update_option_labels()  # Clear options
+        
         self.label.setText('Press Space to start the next trial or R to repeat.')
         self.trial_active = False
         self.question_stage = None
-        self.update_arrow_icons(False)  # Hide arrows
-        self.update_option_labels()  # Clear options
 
     def end_experiment(self):
         self.label.setText('Experiment complete!')
