@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import QApplication, QPushButton, QWidget, QLabel, QVBoxLay
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QPalette, QColor
 from datetime import datetime
-import shift as sft  # Assuming this is a valid library for sound shifting
+import shift as sft  # This is my personal made library for sound shifting
 
 # Sound shifting functions
 fl = lambda x: sft.sound_shift(x, 'phase', 'left', 'short')
@@ -197,13 +197,15 @@ class ExperimentWindow(QWidget):
         # Set focus for space bar to start next trial
         self.setFocusPolicy(Qt.StrongFocus)
 
-    def start_trial(self):
-        if self.current_trial_index >= len(self.trials):
+    def start_trial(self, repeat=False):
+        if not repeat and self.current_trial_index >= len(self.trials):
             self.end_experiment()
             return
 
-        self.current_trial = self.trials[self.current_trial_index]
-        self.current_trial_index += 1
+        # Set up the current trial
+        if not repeat:
+            self.current_trial = self.trials[self.current_trial_index]
+            self.current_trial_index += 1
 
         # Update progress bar
         self.progress_bar.setValue(self.current_trial_index)
@@ -267,16 +269,15 @@ class ExperimentWindow(QWidget):
         self.update_option_labels("Fast", "Slow")
 
     def keyPressEvent(self, event):
-        if not self.trial_active and event.key() == Qt.Key_Space:
-            # Start the next trial when space bar is pressed
+        if event.key() == Qt.Key_R:
+            # Reset the same trial when 'R' is pressed
             self.update_arrow_icons(False)  # Hide arrows
             self.update_option_labels()  # Clear options
-            self.start_trial()
+            self.start_trial(repeat=True)  # Pass a flag to indicate trial repeat
             return
 
-        # Repeat trial if "R" is pressed
-        if not self.trial_active and event.key() == Qt.Key_R:
-            self.current_trial_index -= 1  # Go back one trial
+        if not self.trial_active and event.key() == Qt.Key_Space:
+            # Start the next trial when space bar is pressed
             self.update_arrow_icons(False)  # Hide arrows
             self.update_option_labels()  # Clear options
             self.start_trial()
