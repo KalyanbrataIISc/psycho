@@ -1,24 +1,30 @@
 {
     "name": "test",
-    "age": "19",
+    "age": "test",
     "gender": "Male",
     "email": "",
     "phone": "",
     "responses": [
         {
-            "frequency": 1050,
-            "trial_sound": "right_fast",
-            "start_time": "2024-09-23T19:53:07.486975",
-            "change_detected": true,
-            "direction": "left",
-            "speed": "fast"
+            "frequency": 0,
+            "trial_sound": "constant",
+            "start_time": "2024-09-23T20:31:56.562666",
+            "change_detected": false
         },
         {
-            "frequency": 1850,
-            "trial_sound": "right_slow",
-            "start_time": "2024-09-23T19:51:35.161644",
+            "frequency": 250,
+            "trial_sound": "left_slow",
+            "start_time": "2024-09-23T20:32:13.474205",
             "change_detected": true,
             "direction": "right",
+            "speed": "slow"
+        },
+        {
+            "frequency": 350,
+            "trial_sound": "right_slow",
+            "start_time": "2024-09-23T20:31:29.346897",
+            "change_detected": true,
+            "direction": "left",
             "speed": "slow"
         }
     ]
