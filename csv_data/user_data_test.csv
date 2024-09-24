@@ -1,6 +1,6 @@
 name,age,gender,email,phone
-test,test,Male,NIL,NIL
+test,20,Male,NIL,NIL
 frequency,trial_direction,trial_speed,change_detected,direction,speed,start_time
-0,NIL,NIL,False,NIL,NIL,2024-09-23T20:31:56.562666
-250,left,slow,True,right,slow,2024-09-23T20:32:13.474205
-350,right,slow,True,left,slow,2024-09-23T20:31:29.346897
+250,left,fast,True,left,fast,2024-09-23T21:40:10.830621
+800,left,slow,True,right,slow,2024-09-23T21:41:45.499078
+1800,NIL,NIL,False,NIL,NIL,2024-09-23T21:41:31.345608
