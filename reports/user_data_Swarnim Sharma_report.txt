@@ -1,0 +1,21 @@
+
+    Report for user_data_Swarnim Sharma.csv:
+    ------------------------------------------
+    Correct Change Detection Rate: 84.15%
+    False Positive Rate: 53.66%
+
+    Signal Detection Theory Metrics:
+    d' (Sensitivity): 0.91
+    Beta (Response Bias): 0.61
+
+    Direction Bias:
+    Left: 82.93%
+    Right: 85.37%
+
+    Speed Influence:
+    Fast: 80.43%
+    Slow: 88.89%
+
+    Direction Accuracy Rate: 53.66%
+    Speed Accuracy Rate: 39.02%
+    

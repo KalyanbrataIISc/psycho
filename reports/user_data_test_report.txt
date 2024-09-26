@@ -1,0 +1,21 @@
+
+    Report for user_data_test.csv:
+    ------------------------------------------
+    Correct Change Detection Rate: 100.00%
+    False Positive Rate: 0.00%
+
+    Signal Detection Theory Metrics:
+    d' (Sensitivity): 9.51
+    Beta (Response Bias): 1.00
+
+    Direction Bias:
+    Left: 100.00%
+    Right: 0.00%
+
+    Speed Influence:
+    Fast: 100.00%
+    Slow: 100.00%
+
+    Direction Accuracy Rate: 50.00%
+    Speed Accuracy Rate: 100.00%
+    

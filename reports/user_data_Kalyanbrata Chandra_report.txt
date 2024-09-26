@@ -1,0 +1,21 @@
+
+    Report for user_data_Kalyanbrata Chandra.csv:
+    ------------------------------------------
+    Correct Change Detection Rate: 70.73%
+    False Positive Rate: 4.88%
+
+    Signal Detection Theory Metrics:
+    d' (Sensitivity): 2.20
+    Beta (Response Bias): 3.40
+
+    Direction Bias:
+    Left: 68.29%
+    Right: 73.17%
+
+    Speed Influence:
+    Fast: 72.34%
+    Slow: 68.57%
+
+    Direction Accuracy Rate: 68.29%
+    Speed Accuracy Rate: 59.76%
+    
