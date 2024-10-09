@@ -1,0 +1,21 @@
+
+    Report for user_data_SUTAPA CHANDRA.csv:
+    ------------------------------------------
+    Correct Change Detection Rate: 35.37%
+    False Positive Rate: 2.44%
+
+    Signal Detection Theory Metrics:
+    d' (Sensitivity): 1.60
+    Beta (Response Bias): 6.49
+
+    Direction Bias:
+    Left: 36.59%
+    Right: 34.15%
+
+    Speed Influence:
+    Fast: 31.82%
+    Slow: 39.47%
+
+    Direction Accuracy Rate: 35.37%
+    Speed Accuracy Rate: 20.73%
+    
